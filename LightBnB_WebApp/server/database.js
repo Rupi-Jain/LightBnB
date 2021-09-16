@@ -107,20 +107,21 @@ const getAllProperties = function(options, limit = 10) {
   }
 
   if (options.minimum_price_per_night) {
-    queryParams.push(parseInt(options.minimum_price_per_night));
-    queryString += `and cost_per_night >= $${queryParams.length} `;
+    queryString+= queryParams.length === 0 ? `WHERE ` : `AND `;
+    queryParams.push(options.minimum_price_per_night);
+    queryString += `cost_per_night >= $${queryParams.length} `;
   }
 
   if (options.maximum_price_per_night) {
-    queryParams.push(parseInt(options.maximum_price_per_night));
-    queryString += `and cost_per_night <= $${queryParams.length} `;
+    queryString+= queryParams.length === 0 ? `WHERE ` : `AND `;
+    queryParams.push(options.maximum_price_per_night);
+    queryString += `cost_per_night <= $${queryParams.length} `;
   }
 
-  // 4
   queryString += `
   GROUP BY properties.id `
-  if (options.minimum_rating) {
-    queryParams.push(parseInt(options.minimum_rating));
+  if (options.minimum_rating) { 
+    queryParams.push(options.minimum_rating);
     queryString += `having avg(property_reviews.rating) >= $${queryParams.length} `;
   }
   queryString += `
@@ -129,9 +130,7 @@ const getAllProperties = function(options, limit = 10) {
   queryString += `
   LIMIT $${queryParams.length};
   `;
-
-  // 5
-  //console.log(queryString, queryParams);
+  
   return client
   .query(queryString, queryParams)
   .then(result => result.rows)
@@ -146,9 +145,20 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  const values = Object.values(property);
+  values[2] = parseInt(values[2]);
+  values[3] = parseInt(values[3]);
+  values[4] = parseInt(values[4]);
+  values[5] = parseInt(values[5]);
+  console.log(values);
+  const queryString = `INSERT INTO properties (
+    title, description, number_of_bedrooms, number_of_bathrooms, parking_spaces, cost_per_night, thumbnail_photo_url, cover_photo_url, street, country, city, province, post_code, owner_id) 
+    VALUES ($1, $2,$3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`
+    console.log(queryString);
+    return client
+    .query(queryString,)
+    .then(result => result.rows)
+    .catch(err => err.message)
+ 
 }
 exports.addProperty = addProperty;
