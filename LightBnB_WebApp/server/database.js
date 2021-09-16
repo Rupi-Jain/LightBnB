@@ -50,13 +50,9 @@ exports.getUserWithId = getUserWithId;
 const addUser =  function(user) {
   const queryString = `INSERT INTO users (name, email, password)
   VALUES ($1, $2, $3) RETURNING *`
-  console.log(queryString);
   return client
           .query(queryString, [user.name, user.email, user.password])
-          .then(result => {
-            console.log("insert:" , result.rows);
-            return result.rows
-          })
+          .then(result => result.rows)
           .catch(error => err.message)
 }
 exports.addUser = addUser;
@@ -68,8 +64,19 @@ exports.addUser = addUser;
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
+// const getAllReservations = function(guest_id, limit = 10) {
+//   return getAllProperties(null, 2);
+// }
 const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+  //return getAllProperties(null, 2);
+  console.log("user_id", guest_id)
+  const queryString = `SELECT * from properties
+      JOIN reservations ON properties.id = reservations.property_id
+      where guest_id = $1 LIMIT $2`
+  return client
+  .query(queryString, [guest_id,limit])
+  .then(result => result.rows)
+  .catch(err => err.message)
 }
 exports.getAllReservations = getAllReservations;
 
